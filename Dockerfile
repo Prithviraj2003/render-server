@@ -4,6 +4,8 @@ FROM node:16
 # Set the working directory in the container
 WORKDIR /app
 
+RUN npm i -g pm2
+
 # Copy package.json and package-lock.json into the container
 COPY package*.json ./
 
@@ -14,4 +16,4 @@ RUN npm install
 COPY . .
 
 # Start the app
-CMD ["npm", "start"]
+CMD ["pm2-runtime", "start", "npm", "--name", "test_server", "--", "start"]

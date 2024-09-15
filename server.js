@@ -90,6 +90,7 @@ app.use(cors()); // Enable CORS for cross-origin requests
 app.use(express.json());
 
 const accessTokens = {};
+const usedPorts = [];
 
 // Step 1: GitHub OAuth callback
 app.get("/auth/callback", async (req, res) => {
@@ -163,7 +164,8 @@ app.get("/repos", async (req, res) => {
 
 app.post("/deploy",(req,res)=>{
   console.log(req.body);
-  const deployPort=9000
+  const deployPort=usedPorts.length===0?5001:usedPorts[usedPorts.length-1]+1;
+  console.log(deployPort);
   const {projectName,githubLink,serverPort}=req.body;
   exec(`./script.sh ${githubLink} ${projectName} ${serverPort} ${deployPort}`, (error, stdout, stderr) => {
     if (error) {
