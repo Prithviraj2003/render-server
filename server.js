@@ -82,7 +82,7 @@ const axios = require("axios");
 const cors = require("cors");
 const app = express();
 const port = 5000;
-
+const { exec } = require("child_process");
 const clientID = "Iv23liZu0vG8Ms2Pcw1n"; // Add your GitHub Client ID
 const clientSecret = "1510846215469f6768cb1666dbca569ec2daa369";
 
@@ -151,8 +151,8 @@ app.get("/repos", async (req, res) => {
         Authorization: `Bearer ${accessTokens[username]}`,
       },
       params: {
-        visibility: 'all', // Include private repos
-      }
+        visibility: "all", // Include private repos
+      },
     });
 
     res.json(response.data);
@@ -162,25 +162,33 @@ app.get("/repos", async (req, res) => {
   }
 });
 
-app.post("/deploy",(req,res)=>{
+app.post("/deploy", (req, res) => {
   console.log(req.body);
-  const deployPort=usedPorts.length===0?5001:usedPorts[usedPorts.length-1]+1;
+  const deployPort =
+    usedPorts.length === 0 ? 5001 : usedPorts[usedPorts.length - 1] + 1;
   console.log(deployPort);
-  const {projectName,githubLink,serverPort}=req.body;
-  exec(`./script.sh ${githubLink} ${projectName} ${serverPort} ${deployPort}`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error executing script: ${error.message}`);
-      return res.status(500).send('Failed to execute script');
+  const { projectName, githubLink, serverPort } = req.body;
+  exec(
+    `./script.sh ${githubLink} ${projectName} ${serverPort} ${deployPort}`,
+    (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error executing script: ${error.message}`);
+        return res.status(500).send("Failed to execute script");
+      }
+      console.log(`Script stdout: ${stdout}`);
+      console.error(`Script stderr: ${stderr}`);
+
+      res.send(
+        "Script executed successfully with repository: " +
+          projectName +
+          ".collegestorehub.com"
+      );
     }
-    console.log(`Script stdout: ${stdout}`);
-    console.error(`Script stderr: ${stderr}`);
-
-    res.send('Script executed successfully with repository: ' + projectName+'.collegestorehub.com');
-  });
-
-  
-})
-
+  );
+});
+app.get("/", (req, res) => {
+  res.send("Hello World");
+});
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
