@@ -165,16 +165,16 @@ app.post("/deploy",(req,res)=>{
   console.log(req.body);
   const deployPort=9000
   const {projectName,githubLink,serverPort}=req.body;
-  // exec(`./script.sh ${githubLink} ${projectName} ${serverPort} ${deployPort}`, (error, stdout, stderr) => {
-  //   if (error) {
-  //     console.error(`Error executing script: ${error.message}`);
-  //     return res.status(500).send('Failed to execute script');
-  //   }
-  //   console.log(`Script stdout: ${stdout}`);
-  //   console.error(`Script stderr: ${stderr}`);
+  exec(`./script.sh ${githubLink} ${projectName} ${serverPort} ${deployPort}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing script: ${error.message}`);
+      return res.status(500).send('Failed to execute script');
+    }
+    console.log(`Script stdout: ${stdout}`);
+    console.error(`Script stderr: ${stderr}`);
 
-  //   res.send('Script executed successfully with repository: ' + projectName+'.collegestorehub.com');
-  // });
+    res.send('Script executed successfully with repository: ' + projectName+'.collegestorehub.com');
+  });
 
   
 })
