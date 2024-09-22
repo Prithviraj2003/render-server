@@ -25,7 +25,13 @@ mkdir -p $DEPLOY_FOLDER
 echo "Cloning the GitHub repository: $GITHUB_LINK into $DEPLOY_FOLDER/$CONTAINER_NAME"
 git clone $GITHUB_LINK $DEPLOY_FOLDER/$CONTAINER_NAME
 
-# Step 3: If a root directory is provided, navigate to that directory
+# Step 3: Copy the Dockerfile into the project folder if it exists in the root directory
+if [ -f "Dockerfile" ]; then
+    echo "Copying Dockerfile to the project folder"
+    cp Dockerfile $DEPLOY_FOLDER/$CONTAINER_NAME/Dockerfile
+fi
+
+# Step 4: If a root directory is provided, navigate to that directory
 if [ -n "$ROOT_DIR" ]; then
     echo "Monorepo root directory specified: $ROOT_DIR"
     cd $DEPLOY_FOLDER/$CONTAINER_NAME/$ROOT_DIR || exit 1
@@ -34,13 +40,6 @@ else
     cd $DEPLOY_FOLDER/$CONTAINER_NAME || exit 1
 fi
 
-# Step 4: Copy the Dockerfile into the project folder if it exists in the root directory
-if [ -f "Dockerfile" ]; then
-    echo "Dockerfile found. Using existing Dockerfile."
-else
-    echo "Error: Dockerfile not found in the root directory."
-    exit 1
-fi
 
 # Step 5: Create or update the .env file
 if [ -f ".env" ]; then
@@ -48,9 +47,10 @@ if [ -f ".env" ]; then
 else
     if [ ! -z "$ENV_VARS" ]; then
         echo "Writing sanitized environment variables to .env file"
-        
+
         # Sanitize environment variables by removing spaces around '=' and then split them into lines
-        echo "$ENV_VARS" | sed 's/ *= */=/g' | tr ' ' '\n' > .env
+        # Use tr to handle newlines and sed to clean up spaces
+        echo "$ENV_VARS" | sed 's/ *= */=/g' | tr '\n' '\n' > .env
     else
         echo "No environment variables provided."
     fi

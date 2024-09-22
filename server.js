@@ -170,7 +170,7 @@ app.post("/deploy", (req, res) => {
   console.log(deployPort);
   const { projectName, githubLink, serverPort,env } = req.body;
   exec(
-    `./auto_deploy_server.sh ${githubLink} ${projectName} ${serverPort} ${deployPort} ${env}`,
+    `./auto_deploy_server.sh ${githubLink} ${projectName} ${serverPort} ${deployPort} "${env}"`,
     (error, stdout, stderr) => {
       if (error) {
         console.error(`Error executing script: ${error.message}`);
