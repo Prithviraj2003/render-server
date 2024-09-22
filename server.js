@@ -1,96 +1,17 @@
-// const express = require('express');
-// const session = require('express-session');
-// const passport = require('passport');
-// const GitHubStrategy = require('passport-github2').Strategy;
-// const axios = require('axios');
-// require('dotenv').config();
-
-// const app = express();
-// const port = process.env.PORT || 5000;
-
-// // Session middleware
-// app.use(session({
-//   secret: process.env.SESSION_SECRET,
-//   resave: false,
-//   saveUninitialized: true
-// }));
-
-// // Initialize passport
-// app.use(passport.initialize());
-// app.use(passport.session());
-
-// // GitHub OAuth Strategy
-// passport.use(new GitHubStrategy({
-//   clientID: process.env.GITHUB_CLIENT_ID,
-//   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-//   callbackURL: "/auth/github/callback"
-// }, (accessToken, refreshToken, profile, done) => {
-//   // Save access token and profile info in session
-//   return done(null, { profile, accessToken });
-// }));
-
-// passport.serializeUser((user, done) => {
-//   done(null, user);
-// });
-
-// passport.deserializeUser((obj, done) => {
-//   done(null, obj);
-// });
-
-// // GitHub login route
-// app.get('/auth/github', passport.authenticate('github', { scope: ['user', 'repo'] }));
-
-// // GitHub callback route
-// app.get('/auth/github/callback',
-//   passport.authenticate('github', { failureRedirect: '/' }),
-//   (req, res) => {
-//     res.redirect('/repos');
-//   });
-
-// // Fetch user's GitHub repositories
-// app.get('/repos', (req, res) => {
-//   if (!req.isAuthenticated()) {
-//     return res.redirect('/auth/github');
-//   }
-
-//   const accessToken = req.user.accessToken;
-
-//   // Fetch user repositories from GitHub API
-//   axios.get('https://api.github.com/user/repos', {
-//     headers: {
-//       Authorization: `token ${accessToken}`
-//     }
-//   })
-//   .then(response => {
-//     const repos = response.data;
-//     res.json(repos);
-//   })
-//   .catch(error => {
-//     console.error('Error fetching repos:', error);
-//     res.status(500).json({ error: 'Failed to fetch repositories' });
-//   });
-// });
-
-// // Start server
-// app.listen(port, () => {
-//   console.log(`Server running on http://localhost:${port}`);
-// });
-
-// server.js
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const app = express();
 const port = 5000;
 const { exec } = require("child_process");
-const clientID = "Iv23liZu0vG8Ms2Pcw1n"; // Add your GitHub Client ID
-const clientSecret = "1510846215469f6768cb1666dbca569ec2daa369";
+const dotenv = require("dotenv");
+dotenv.config();
+console.log(process.env.GITHUB_CLIENT_ID);
 
 app.use(cors()); // Enable CORS for cross-origin requests
 app.use(express.json());
 
-const accessTokens = {};
-const usedPorts = [];
+const accessTokens = [];
 
 // Step 1: GitHub OAuth callback
 app.get("/auth/callback", async (req, res) => {
@@ -104,8 +25,8 @@ app.get("/auth/callback", async (req, res) => {
     const response = await axios.post(
       "https://github.com/login/oauth/access_token",
       {
-        client_id: clientID,
-        client_secret: clientSecret,
+        client_id: process.env.GITHUB_CLIENT_ID,
+        client_secret: process.env.GITHUB_CLIENT_SECRET,
         code,
       },
       {
@@ -166,14 +87,25 @@ app.post("/deploy", (req, res) => {
   console.log(req.body);
   const deployPort = Math.floor(Math.random() * 10000) + 1;
   console.log(deployPort);
-  
-  const { projectName, githubLink, serverPort, env } = req.body;
 
+  const { userName, projectName, githubLink, serverPort, env, private } =
+    req.body;
+  let CloneLink = githubLink;
+  if (private) {
+    console.log("Private Repo");
+    CloneLink = githubLink.replace(
+      "git",
+      `https://${userName}:${accessTokens[userName]}`
+    );
+    console.log(CloneLink);
+  }
   // Convert the env array to a string format for the script
-  const envString = env.map(e => `${e.key}=${e.value}`).join('\n');
+  const envString = env.map((e) => `${e.key}=${e.value}`).join("\n");
 
   exec(
-    `./auto_deploy_server.sh ${githubLink} ${projectName} ${serverPort} ${deployPort} "${envString}"`,
+    `./auto_deploy_server.sh ${CloneLink} ${projectName} ${serverPort} ${deployPort} ${
+      envString ? `"${envString}"` : ""
+    }`,
     (error, stdout, stderr) => {
       if (error) {
         console.error(`Error executing script: ${error.message}`);
@@ -189,6 +121,30 @@ app.post("/deploy", (req, res) => {
       );
     }
   );
+});
+
+app.get("/branches", async (req, res) => {
+  const { username, fullRepoName } = req.query;
+  console.log(username, fullRepoName);
+  if (!username || !fullRepoName || !accessTokens[username]) {
+    return res.status(401).send("Unauthorized");
+  }
+
+  try {
+    const response = await axios.get(
+      `https://api.github.com/repos/${fullRepoName}/branches`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessTokens[username]}`,
+        },
+      }
+    );
+    console.log(response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Failed to fetch branches");
+  }
 });
 
 app.get("/", (req, res) => {
