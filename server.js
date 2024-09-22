@@ -164,13 +164,16 @@ app.get("/repos", async (req, res) => {
 
 app.post("/deploy", (req, res) => {
   console.log(req.body);
-  // const deployPort =
-  //   usedPorts.length === 0 ? 5001 : usedPorts[usedPorts.length - 1] + 1;
-  const deployPort=Math.floor(Math.random() * 10000) + 1;
+  const deployPort = Math.floor(Math.random() * 10000) + 1;
   console.log(deployPort);
-  const { projectName, githubLink, serverPort,env } = req.body;
+  
+  const { projectName, githubLink, serverPort, env } = req.body;
+
+  // Convert the env array to a string format for the script
+  const envString = env.map(e => `${e.key}=${e.value}`).join('\n');
+
   exec(
-    `./auto_deploy_server.sh ${githubLink} ${projectName} ${serverPort} ${deployPort} "${env}"`,
+    `./auto_deploy_server.sh ${githubLink} ${projectName} ${serverPort} ${deployPort} "${envString}"`,
     (error, stdout, stderr) => {
       if (error) {
         console.error(`Error executing script: ${error.message}`);
@@ -187,6 +190,7 @@ app.post("/deploy", (req, res) => {
     }
   );
 });
+
 app.get("/", (req, res) => {
   res.send("Hello World");
 });

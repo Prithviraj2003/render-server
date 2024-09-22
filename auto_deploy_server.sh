@@ -48,9 +48,8 @@ else
     if [ ! -z "$ENV_VARS" ]; then
         echo "Writing sanitized environment variables to .env file"
 
-        # Sanitize environment variables by removing spaces around '=' and then split them into lines
-        # Use tr to handle newlines and sed to clean up spaces
-        echo "$ENV_VARS" | sed 's/ *= */=/g' | tr '\n' '\n' > .env
+        # Sanitize and write the environment variables
+        echo "$ENV_VARS" | sed 's/ *= */=/g' > .env
     else
         echo "No environment variables provided."
     fi
