@@ -167,9 +167,9 @@ app.post("/deploy", (req, res) => {
   const deployPort =
     usedPorts.length === 0 ? 5001 : usedPorts[usedPorts.length - 1] + 1;
   console.log(deployPort);
-  const { projectName, githubLink, serverPort } = req.body;
+  const { projectName, githubLink, serverPort,env } = req.body;
   exec(
-    `./script.sh ${githubLink} ${projectName} ${serverPort} ${deployPort}`,
+    `./auto_deploy_server.sh ${githubLink} ${projectName} ${serverPort} ${deployPort} ${env}`,
     (error, stdout, stderr) => {
       if (error) {
         console.error(`Error executing script: ${error.message}`);
