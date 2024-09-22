@@ -164,8 +164,9 @@ app.get("/repos", async (req, res) => {
 
 app.post("/deploy", (req, res) => {
   console.log(req.body);
-  const deployPort =
-    usedPorts.length === 0 ? 5001 : usedPorts[usedPorts.length - 1] + 1;
+  // const deployPort =
+  //   usedPorts.length === 0 ? 5001 : usedPorts[usedPorts.length - 1] + 1;
+  const deployPort=Math.floor(Math.random() * 10000) + 1;
   console.log(deployPort);
   const { projectName, githubLink, serverPort,env } = req.body;
   exec(

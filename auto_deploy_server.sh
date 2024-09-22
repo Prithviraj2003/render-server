@@ -41,7 +41,7 @@ if [ -f ".env" ]; then
     echo "Existing .env file found. Skipping overwriting of the file."
 else
     echo "Creating a new .env file from provided environment variables."
-    echo "$ENV_VARS" > .env
+    echo $ENV_VARS > .env
 fi
 
 # Step 4: Build the Docker image
